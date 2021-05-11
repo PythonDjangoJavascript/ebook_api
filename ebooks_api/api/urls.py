@@ -3,4 +3,5 @@ from . import views
 
 urlpatterns = [
     path('ebooks/', views.EbookListCreateAPiView.as_view(), name='ebooks-list'),
+    path('ebooks/<int:pk>/', views.EbookDetailAPiView.as_view(), name='ebooks-detail'),
 ]
