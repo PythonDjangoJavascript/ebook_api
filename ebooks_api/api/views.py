@@ -2,6 +2,7 @@ from rest_framework import generics
 from rest_framework import permissions
 from rest_framework.exceptions import ValidationError
 
+from ebooks_api.api.pagination import ThreeNumberPagination
 from ebooks_api.api.permissions import IsAdminUserOrReadOnly, IsReviewAuthorOrReadOnly
 from ebooks_api.models import Ebook, Review
 from ebooks_api.api.serializers import EbookSerializer, ReviewSerializer
@@ -10,9 +11,10 @@ from ebooks_api.api.serializers import EbookSerializer, ReviewSerializer
 class EbookListCreateAPiView(generics.ListCreateAPIView):
     """Manages Ebook view endpoints"""
 
-    queryset = Ebook.objects.all()
+    queryset = Ebook.objects.all().order_by('-id')
     serializer_class = EbookSerializer
     permission_classes = [IsAdminUserOrReadOnly, ]
+    pagination_class = ThreeNumberPagination
 
 
 class EbookDetailAPiView(generics.RetrieveUpdateDestroyAPIView):
