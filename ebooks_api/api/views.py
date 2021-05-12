@@ -1,7 +1,8 @@
 from rest_framework import generics
 from rest_framework import permissions
+from rest_framework.exceptions import ValidationError
 
-from ebooks_api.api.permissions import IsAdminUserOrReadOnly
+from ebooks_api.api.permissions import IsAdminUserOrReadOnly, IsReviewAuthorOrReadOnly
 from ebooks_api.models import Ebook, Review
 from ebooks_api.api.serializers import EbookSerializer, ReviewSerializer
 
@@ -26,13 +27,22 @@ class ReviewCreateAPiVeiw(generics.CreateAPIView):
 
     queryset = Review.objects.all()
     serializer_class = ReviewSerializer
+    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
 
     def perform_create(self, serializer):
         """Save Review to the Specific eBook"""
+        review_author = self.request.user
 
         ebook_pk = self.kwargs.get('ebook_pk')
         ebook = generics.get_object_or_404(Ebook, pk=ebook_pk)
-        serializer.save(ebook=ebook)
+
+        curr_user_review = Review.objects.filter(
+            ebook=ebook, review_author=review_author)
+
+        if curr_user_review.exists():
+            """As user already reviewed theis"""
+            raise ValidationError('You already have reviewed this book!')
+        serializer.save(ebook=ebook, review_author=review_author)
 
 
 class ReviewDetailAPiView(generics.RetrieveUpdateDestroyAPIView):
@@ -40,6 +50,7 @@ class ReviewDetailAPiView(generics.RetrieveUpdateDestroyAPIView):
 
     queryset = Review.objects.all()
     serializer_class = ReviewSerializer
+    permission_classes = [IsReviewAuthorOrReadOnly, ]
 
 # Just for Practice how concrete classes work under the hood
 # class EbookListCreateAPiView(mixins.ListModelMixin,
